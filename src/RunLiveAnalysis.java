@@ -3,27 +3,42 @@ import soot.*;
 import soot.options.Options;
 import soot.toolkits.graph.*;
 import soot.toolkits.scalar.*;
+import java.io.File;
 
 import java.util.*;
 
 public class RunLiveAnalysis
 {
+
+    /*Links:
+    Using custom entry points in soot.
+    http://www.bodden.de/2012/07/26/soot-custom-entry-points/
+     */
+
 	public static void main(String[] args) {
 		args = new String[] {"LiveVarsClass"};
 		
-		if (args.length == 0) {
-			System.out.println("Usage: java RunLiveAnalysis class_to_analyse");
-			System.exit(0);
-		}
-		
-		Scene.v().setSootClassPath(Scene.v().defaultClassPath()+":./res");
-		System.out.println(Scene.v().defaultClassPath());
+
+		Scene.v().setSootClassPath(Scene.v().defaultClassPath()+":res");
+
 		
 		Options.v().set_src_prec(Options.src_prec_java);
 		Options.v().set_output_format(Options.output_format_jimple);
-		
-		
-		SootClass sClass = Scene.v().loadClassAndSupport(args[0]);		
+
+        //add process-dirs
+        File fld  = new File("./res/libs");
+        for (File fileEntry : fld.listFiles()) {
+            if(fileEntry.isFile() && fileEntry.getName().endsWith(".jar"))
+                Scene.v().setSootClassPath(Scene.v().getSootClassPath()+":"+fileEntry.getAbsolutePath());
+        }
+        System.out.println(Scene.v().getSootClassPath());
+
+        /* Non application mode, referenced libraries are not processed */
+        Options.v().set_app(false);
+
+        Options.v().no_bodies_for_excluded();
+
+		SootClass sClass = Scene.v().loadClassAndSupport(args[0]);
 		
 		sClass.setApplicationClass();
 		
